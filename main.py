@@ -1,43 +1,47 @@
-from telegram import Update, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
-from telegram.ext import Updater, CallbackContext, Filters, MessageHandler
-
-button_help = 'Помогу по понятиям'
-
-def button_help_handler(update: Update, context: CallbackContext):
-    update.message.reply_text(
-        text='А вот и кореша на помощь спешат!',
-        reply_markup = ReplyKeyboardRemove(),
-    )
+import logging
+import config
+from dbhundler import SQLighter
+from aiogram import Bot, Dispatcher, executor, types
+from wheather_parser import parser
 
 
-def message_handler(update: Update, context: CallbackContext):
-    text = update.message.text
-    if text == button_help:
-        return button_help_handler(update=update, context= context)
-    reply_markup =ReplyKeyboardMarkup(
-        keyboard=[
-            [
-                KeyboardButton(text=button_help),
-            ],
-        ],
-        resize_keyboard=True
-    )
+logging.basicConfig(level=logging.INFO)
 
-    update.message.reply_text(
-        text='Здорова, бандит! Тыкай на кнопку снизу! Будет четко!',
-        reply_markup=reply_markup,
-    )
+bot = Bot(token=config.TOKEN)
+dp = Dispatcher(bot)
 
-def main():
-    updater = Updater(
-        token='1519801549:AAEpCGgq4F4O2QAKG1QOn01c5hPlQc4H1rw',
-        use_context=True
-    )
+"""Инициализация соединения с БД"""
+db = SQLighter('db.db')
 
-    updater.dispatcher.add_handler(MessageHandler(Filters.all, callback=message_handler))
-    updater.start_polling()
-    updater.idle()
+# Команда активации подписки
+@dp.message_handler(commands=['subscribe'])
+async def subscribe(message: types.Message):
+    if (not db.subscriber_exists(message.from_user.id)):
+        # Если юзера нет в базе, добавляем его
+        db.add_subscriber(message.from_user.id)
+    else:
+        # Если он уже есть, то просто обновляем ему статус подписки
+        db.update_subscription(message.from_user.id, True)
+    gt = parser()
+    await message.answer("Здорова, Бандит! Получи прогноз!\n" + gt)
 
 
-if __name__=='__main__':
-    main()
+
+
+# Команда отписки
+@dp.message_handler(commands=['unsubscribe'])
+async def unsubscribe(message: types.Message):
+    if (not db.subscriber_exists(message.from_user.id)):
+        # Если юзера нет в базе, добавляем его с неактивной подпиской
+        db.add_subscriber(message.from_user.id, False)
+        await message.answer("Ты и так не с нами!")
+    else:
+        # Если он уже есть, то просто обновляем ему статус подписки
+        db.update_subscription(message.from_user.id, False)
+        await message.answer("Отписан! Будешь скучать - заглядывай!")
+
+
+
+# Запуск
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=True)
