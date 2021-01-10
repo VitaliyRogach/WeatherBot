@@ -13,6 +13,11 @@ dp = Dispatcher(bot)
 """Инициализация соединения с БД"""
 db = SQLighter('db.db')
 
+# Вывод условия при начале использования бот при команде START
+@dp.message_handler(commands=['start'])
+async def start_bot(message: types.Message):
+    await message.answer("Пиши '/' и увидишь команды. ")
+
 # Команда активации подписки
 @dp.message_handler(commands=['subscribe'])
 async def subscribe(message: types.Message):
