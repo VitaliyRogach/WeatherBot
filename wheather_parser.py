@@ -15,7 +15,7 @@ def parser():
     min, max = temperature_list[0], temperature_list[1]
     some_text = html.find('div', {"class":"weather__article_description-text"}).text
     all_day_inf = (f'                    '
-                   f'{day_name}  {date}  {mouth},\n'
+                   f'{day_name}  {date}  {mouth}1Ё\n'
                    f'Минмиальная температура: {min}\n'
                    f'Максимальная температура: {max}\n'
                    f'{some_text}')
