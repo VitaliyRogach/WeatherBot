@@ -17,7 +17,7 @@ db = SQLighter('db.db')
 @dp.message_handler(commands=['start'])
 async def start_bot(message: types.Message):
     await message.answer("Пиши '/' и увидишь команды. ")
-
+    await message.answer_sticker(r'CAACAgIAAxkBAAEB0rFgEqgIZkOJjyimU-kH7-xnH3qAdAACYwIAAs3ASBgwJUq5vj4DRR4E')
 # Команда активации подписки
 @dp.message_handler(commands=['subscribe'])
 async def subscribe(message: types.Message):
@@ -29,6 +29,8 @@ async def subscribe(message: types.Message):
         db.update_subscription(message.from_user.id, True)
     gt = parser()
     await message.answer("Здорова, Бандит! Получи прогноз!\n" + gt)
+
+
 
 
 
